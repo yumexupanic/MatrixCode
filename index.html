@@ -1,0 +1,161 @@
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>看看电影中的黑客是如何敲代码的</title>
+	<style>
+		* {
+			margin: 0;
+			padding: 0;
+		}
+
+		html,body {
+			width: 100%;
+			height: 100%;
+			background-color: #000;
+			color: #3BEA3B;
+		}
+
+		#main {
+			letter-spacing: 2px;
+			font-family: "Courier New";
+		}
+
+		#print {
+			font-family: inherit;
+			display: inline;
+		}
+	</style>
+</head>
+<body>
+	<div id="main"><pre id="print"></pre><span class="loading"></span></div>
+	<script>
+
+		function find(selector) {
+			return document.querySelector(selector);
+		}
+
+		function Print(cursor, content, cursorContainer, container) {
+			this.cursor = cursor;
+			this.content = content;
+			this.cursorContainer = cursorContainer;
+			this.container = container;
+			this.speed = 300;
+			this.run = true;
+			this.rIndex = 2;
+			this.aIndex = 3;
+			this.currentIndex = 0;
+			this.selfRun = function() {
+				var flag = false;
+				var self = this;
+				setInterval(function() {
+					if (self.run) {
+						if (flag) {
+							self.cursorContainer.innerText = "";
+							flag = false;
+						} else {
+							self.cursorContainer.innerText = self.cursor;
+							flag = true;
+						}
+					} else {
+						self.cursorContainer.innerText = "";
+					}
+				},
+				self.speed);
+			},
+			this.begin = function() {
+				this.run = true;
+			},
+			this.stop = function() {
+				this.run = false;
+			}
+			this.print = function(keycode) {
+				if (keycode == 8) { //删除
+					var temp = this.container.innerText;
+					var index = temp.length - this.rIndex;
+					temp = temp.substring(0, index);
+					this.currentIndex = index;
+					this.container.innerText = temp;
+				} else {
+					var text = document.createElement("text");
+					var lastIndex = this.currentIndex;
+					this.currentIndex += this.aIndex;
+					var con = this.content.substring(lastIndex, this.currentIndex);
+					text.textContent = con;
+					this.container.appendChild(text);
+				}
+			};
+			this.selfRun();
+		};
+
+		window.onload = function() {
+			function requestFullScreen() {
+				var de = document.documentElement;
+				if (de.requestFullscreen) {
+					de.requestFullscreen();
+				} else if (de.mozRequestFullScreen) {
+					de.mozRequestFullScreen();
+				} else if (de.webkitRequestFullScreen) {
+					de.webkitRequestFullScreen();
+				}
+			}
+
+			document.addEventListener("click",
+			function() {
+				requestFullScreen();
+			},
+			false);
+
+			document.body.click();
+
+			var httpRequest = new XMLHttpRequest();
+
+			httpRequest.onreadystatechange = callFun;
+
+			httpRequest.open("get", "coder.txt", true);
+
+			httpRequest.send(null);
+
+			function callFun() {
+				if (httpRequest.readyState == 4 && httpRequest.status == 200) {
+					var text = httpRequest.responseText;
+					run(text);
+				}
+			}
+
+			function run(content) {
+
+				var container = find("#print");
+
+				var loading = find(".loading");
+
+				var cursor = "|";
+
+				var pr = new Print(cursor, content, loading, container);
+
+				var main = find("#main");
+
+				var body = document.body;
+
+				document.onkeydown = function(e) {
+					pr.stop();
+					var height = main.offsetHeight;
+					if (height > (screen.availHeight - 40)) {
+						body.scrollTop = height + 200;
+					}
+					pr.print(e.keyCode);
+				};
+
+				document.onkeyup = function() {
+					pr.begin();
+				}
+			}
+
+		};
+
+		document.oncontextmenu = function(){
+			return false;
+		}
+
+	</script>
+</body>
+</html>
